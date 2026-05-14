@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dbfe1d7e15f122e46865ba291389f701, type: 3}
+  m_Name: HolyBolt
+  m_EditorClassIdentifier: Assembly-CSharp::LLL.SkillData
+  <Id>k__BackingField: 0
+  <Icon>k__BackingField: {fileID: 0}
+  <Type>k__BackingField: 1
+  <EffectTags>k__BackingField: 1
+  <Damages>k__BackingField:
+  - <Type>k__BackingField: 8
+    <PhysicsFactors>k__BackingField: []
+    <PhysicsCs>k__BackingField: []
+    <MagicFactors>k__BackingField:
+    - 0
+    - 0.8
+    - 2
+    <MagicCs>k__BackingField:
+    - 0
+    - 10
+    - 20
+    <Target>k__BackingField: 1
+    <TargetCount>k__BackingField: 
+    <HitCount>k__BackingField: 
+  <Heals>k__BackingField:
+  - <PhysicsFactors>k__BackingField: []
+    <PhysicsCs>k__BackingField: []
+    <MagicFactors>k__BackingField:
+    - 0
+    - 0
+    - 1
+    <MagicCs>k__BackingField:
+    - 0
+    - 0
+    - 10
+    <Target>k__BackingField: 3
+    <TargetCount>k__BackingField: 000000000000000001000000
+  <Blocks>k__BackingField: []

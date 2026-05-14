@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 377e0e3ebd28ee94abb21c50425b6b37, type: 3}
+  m_Name: SkillLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::LLL.SkillLibrary
+  <SkillData>k__BackingField:
+  - {fileID: 11400000, guid: cdfca354ddac32e4cae086cc1d0304ce, type: 2}
+  - {fileID: 11400000, guid: ae00580c9a130e744876a65c97cf385c, type: 2}
+  - {fileID: 11400000, guid: a7f30a9721b51a54c8f795f6d8f254a5, type: 2}
+  - {fileID: 11400000, guid: 0fdef0f4899ba96428c1e0a4c589df63, type: 2}
+  - {fileID: 11400000, guid: 71ab8bc2614103f48acc3ff284599700, type: 2}
+  - {fileID: 11400000, guid: f517ea3fefaefdb49a90d8edff7bfc50, type: 2}

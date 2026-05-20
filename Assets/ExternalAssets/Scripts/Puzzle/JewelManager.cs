@@ -1,6 +1,4 @@
-using System;
 using System.Linq;
-using UnityEditor.Profiling;
 using UnityEngine;
 
 namespace LLL
@@ -16,37 +14,57 @@ namespace LLL
 
     public class JewelManager : MonoSingleton<JewelManager>
     {
+        public const int JewelSkillCount = 6;
+        private const int DefaultLineLength = 7;
+
         private SOManager sOManager;
         
-        [field: SerializeField] private Jewel[] jewels;
-        [field: SerializeField] private int[] ChosenJewels;
-        [field: SerializeField] private int dragCount;
+        [SerializeField] private Jewel[] jewels;
+        [SerializeField] private int[] ChosenJewels;
+        [SerializeField] private int dragCount;
         
-        public Color32[] tempColors;
+        public Color32[] tempColors = new Color32[JewelSkillCount]
+        {
+            new Color32(225, 72, 76, 255),
+            new Color32(238, 118, 70, 255),
+            new Color32(72, 176, 103, 255),
+            new Color32(145, 203, 75, 255),
+            new Color32(72, 128, 224, 255),
+            new Color32(85, 189, 231, 255),
+        };
 
         public bool IsDown { get => isDown; }
+        public Jewel[] Jewels => jewels;
 
         private bool isDown;
         private Direction dir;
+        private SkillLibrary skillLibrary;
 
         public void Initialize(SOManager _sOManager)
         {
             sOManager = _sOManager;
+            skillLibrary = sOManager != null ? sOManager.SkillLibrary : null;
+
             isDown = false;
             dir = Direction.None;
             dragCount = 0;
-            ChosenJewels = new int[7];
+            ChosenJewels = new int[DefaultLineLength];
 
-            SkillLibrary skillLibrary = sOManager.SkillLibrary;
+            EnsureJewelReferences();
+            EnsurePalette();
+
             int n = jewels.Length;
             for (int i = 0; i < n; i++)
             {
+                if (jewels[i] == null) continue;
+
                 jewels[i].Initialize(this, skillLibrary, i);
             }
         }
 
         public bool MouseDownCall(Jewel jewel)
         {
+            if (jewel == null) return false;
             if (isDown) return false;
 
             isDown = true;
@@ -74,6 +92,7 @@ namespace LLL
 
         public bool MouseEnterCall(Jewel jewel)
         {
+            if (jewel == null) return false;
             if (!isDown) return false;
 
             // Add Condition to Drag
@@ -165,6 +184,8 @@ namespace LLL
 
         private void DragAhead(Jewel jewel)
         {
+            if (dragCount >= ChosenJewels.Length) return;
+
             ChosenJewels[dragCount++] = jewel.ID;
             jewel.ActivateJewel(true);
         }
@@ -233,10 +254,13 @@ namespace LLL
             if ((int)jewel.Pos.y == 0) dir = Direction.Up;
             else if ((int)jewel.Pos.y == 6) dir = Direction.Down;
             else if ((int)jewel.Pos.x == 0) dir = Direction.Right;
-            else if ((int)jewel.Pos.y == 6) dir = Direction.Left;
+            else if ((int)jewel.Pos.x == 6) dir = Direction.Left;
             else return false; // Not Start Pos;
 
-            jewels[ChosenJewels[0]].ActivateJewel(false);
+            if (dragCount > 0)
+            {
+                jewels[ChosenJewels[0]].ActivateJewel(false);
+            }
 
             ChosenJewels[0] = jewel.ID;
             jewel.ActivateJewel(true);
@@ -247,24 +271,63 @@ namespace LLL
 
         private void PopChosenJewels()
         {
-            if (dragCount == 7)
+            if (dragCount == ChosenJewels.Length)
             {
                 Debug.Log("Pop!");
-                foreach (int id in ChosenJewels)
+                for (int i = 0; i < dragCount; i++)
                 {
+                    int id = ChosenJewels[i];
                     jewels[id].Pop();
                 }
             }
             else
             {
                 Debug.Log("Reset");
-                foreach (int id in ChosenJewels)
+                for (int i = 0; i < dragCount; i++)
                 {
+                    int id = ChosenJewels[i];
                     jewels[id].ActivateJewel(false);
                 }
             }
             dir = Direction.None;
             dragCount = 0;
+        }
+
+        public Color32 GetJewelColor(int jewelType)
+        {
+            EnsurePalette();
+
+            int index = Mathf.Clamp(jewelType, 0, tempColors.Length - 1);
+            return tempColors[index];
+        }
+
+        public SkillData GetSkillData(int jewelType)
+        {
+            return skillLibrary != null ? skillLibrary.GetSkillData(jewelType) : null;
+        }
+
+        private void EnsureJewelReferences()
+        {
+            if (jewels != null && jewels.Length > 0) return;
+
+            jewels = FindObjectsByType<Jewel>(FindObjectsSortMode.None)
+                .OrderBy(jewel => jewel.ID)
+                .ToArray();
+        }
+
+        private void EnsurePalette()
+        {
+            if (tempColors != null && tempColors.Length >= JewelSkillCount) return;
+
+            tempColors = new Color32[JewelSkillCount]
+            {
+                new Color32(225, 72, 76, 255),
+                new Color32(238, 118, 70, 255),
+                new Color32(72, 176, 103, 255),
+                new Color32(145, 203, 75, 255),
+                new Color32(72, 128, 224, 255),
+                new Color32(85, 189, 231, 255),
+            };
         }
 
     }

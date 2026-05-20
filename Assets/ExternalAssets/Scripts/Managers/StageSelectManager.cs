@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace LLL
 {
-    public class StageSelectManager : MonoBehaviour
+    public class StageSelectManager : MonoSingleton<StageSelectManager>
     {
         private GameManager gameManager;
         private bool isLoading;

@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace LLL
 {
-    public class InStageManager : MonoBehaviour
+    public class InStageManager : MonoSingleton<InStageManager>
     {
         private GameManager gameManager;
         [field: SerializeField] private JewelManager jewelManager;

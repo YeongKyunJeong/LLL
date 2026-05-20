@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace LLL
 {
-    public class SOManager : MonoBehaviour
+    public class SOManager : MonoSingleton<SOManager>
     {
         [field: SerializeField] public SkillLibrary SkillLibrary { get; private set; }
 

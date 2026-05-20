@@ -10,16 +10,7 @@
 - 미검증 작업을 완료로 보고하지 않습니다.
 - 결과 보고는 기본적으로 간결하게 작성합니다.
 - 모든 에이전트는 본인이 수행한 작업을 사용자가 흐름을 파악할 수 있을 정도로 짧게 요약합니다.
-
-## 프로젝트 값
-
-```text
-PROJECT_NAME = LLL
-PROJECT_TYPE = Unity
-PRIMARY_WORKSPACE = C:\Unity Projects\Study\LLL
-TEAM_BUILDING = ops/TEAM_BUILDING.md
-WORK_RULES = ops/WORK_RULES.md
-```
+- 토큰 소모를 줄이기 위해 작업 요약은 핵심 변경과 검증만 1~2문장으로 작성합니다.
 
 ## 작업 방식
 
@@ -57,7 +48,7 @@ WORK_RULES = ops/WORK_RULES.md
 
 ```text
 완료: [한 문장]
-작업 요약: [무엇을 확인하거나 변경했는지 한 문장]
+작업 요약: [무엇을 확인하거나 변경했는지 1~2문장]
 검증: [확인 방법 또는 미실행 사유]
 남은 항목: [없음 또는 다음 항목]
 ```
@@ -69,4 +60,14 @@ WORK_RULES = ops/WORK_RULES.md
 - [이름]: [직책] / [수행한 작업 한 문장 요약]
 검증: [확인 방법 또는 미실행 사유]
 남은 항목: [없음 또는 다음 항목]
+```
+
+## 프로젝트 값
+
+```text
+PROJECT_NAME = LLL
+PROJECT_TYPE = Unity
+PRIMARY_WORKSPACE = C:\Unity Projects\LLL
+TEAM_BUILDING = ops/TEAM_BUILDING.md
+WORK_RULES = ops/WORK_RULES.md
 ```

@@ -6,6 +6,10 @@
 # See: https://github.com/github/gitignore/tree/main/Global
 #
 .utmp/
+*.log
+
+# Local/unused Unity packages
+/[Pp]ackages/com.unity.ai.assistant/
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
@@ -13,7 +17,8 @@
 /[Bb]uilds/
 /[Ll]ogs/
 /[Uu]ser[Ss]ettings/
-*.log
+/.idea/
+/.vscode/
 
 # By default unity supports Blender asset imports, *.blend1 blender files do not need to be commited to version control.
 *.blend1
@@ -50,7 +55,10 @@ ExportedObj/
 *.suo
 *.tmp
 *.user
+*.userosscache
 *.userprefs
+*.rsuser
+*.sln.docstates
 *.pidb
 *.booproj
 *.svd
@@ -73,9 +81,11 @@ mono_crash.*
 # Builds
 *.apk
 *.aab
+*.ipa
 *.unitypackage
 *.unitypackage.meta
 *.app
+*.symbols.zip
 
 # Crashlytics generated file
 crashlytics-build.properties

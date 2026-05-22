@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace LLL
 {
-    public class Jewel : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerEnterHandler, IPointerClickHandler
+    public class Jewel : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
         private static JewelManager jewelManager;
         private static SkillLibrary skillLibrary;
@@ -15,6 +15,14 @@ namespace LLL
         public int jewelType;
         public bool IsActive { get => isChosen; }
         public SkillData SkillData => skillLibrary != null ? skillLibrary.GetSkillData(jewelType) : null;
+        public Vector3 WorldPosition
+        {
+            get
+            {
+                CacheVisualReferences();
+                return rectTransform != null ? rectTransform.position : transform.position;
+            }
+        }
 
         [field: SerializeField] private int iD;
         [field: SerializeField] private Vector2 pos;
@@ -24,6 +32,17 @@ namespace LLL
         [field: SerializeField] private GameObject tempEffect;
 
         private bool isInitialize = false;
+        private bool isPreviewingMove;
+        private RectTransform rectTransform;
+        private RectTransform iconRect;
+        private RectTransform effectRect;
+        private Image iconImage;
+        private Image effectImage;
+        private Vector3 iconBaseScale = Vector3.one;
+        private Vector3 effectBaseScale = Vector3.one;
+        private Vector3 iconBaseLocalPosition;
+        private Vector3 effectBaseLocalPosition;
+        private Color baseJewelColor = Color.white;
 
 
         public void Initialize(JewelManager _jewelManager, SkillLibrary _skillLibrary, int _iD)
@@ -31,6 +50,7 @@ namespace LLL
             if (jewelManager == null) jewelManager = _jewelManager;
             if (skillLibrary == null) skillLibrary = _skillLibrary;
             iD = _iD;
+            CacheVisualReferences();
             ChangeJewelType();
             isInitialize = true;
             isChosen = true; // To Initialize;
@@ -45,11 +65,11 @@ namespace LLL
 
             if (_isChosen)
             {
-                if (tempEffect != null) tempEffect.SetActive(true);
+                SetDragFeedback(1);
                 return;
             }
 
-            if (tempEffect != null) tempEffect.SetActive(false);
+            ClearFeedback();
             return;
         }
 
@@ -86,21 +106,208 @@ namespace LLL
         public void ApplyVisual()
         {
             if (jewelManager == null) return;
+            CacheVisualReferences();
 
             SkillData skillData = SkillData;
             Color32 jewelColor = jewelManager.GetJewelColor(jewelType);
+            baseJewelColor = jewelColor;
 
-            if (tempIcon != null && tempIcon.TryGetComponent(out Image img))
+            if (iconImage != null)
             {
-                img.color = jewelColor;
-                img.sprite = skillData != null && skillData.Icon != null ? skillData.Icon : GetFallbackIcon(jewelType);
-                img.preserveAspect = true;
+                iconImage.color = jewelColor;
+                iconImage.sprite = skillData != null && skillData.Icon != null ? skillData.Icon : GetFallbackIcon(jewelType);
+                iconImage.preserveAspect = true;
             }
 
-            if (tempEffect != null && tempEffect.TryGetComponent(out Image effectImage))
+            if (effectImage != null)
             {
-                effectImage.color = new Color(jewelColor.r / 255f, jewelColor.g / 255f, jewelColor.b / 255f, 0.65f);
+                effectImage.color = WithAlpha(baseJewelColor, 0f);
             }
+
+            ResetAnimationState();
+        }
+
+        public void SetDragFeedback(int connectedCount)
+        {
+            CacheVisualReferences();
+
+            float clampedCount = Mathf.Clamp(connectedCount, 1, JewelManager.DefaultLineLength);
+            float progress = clampedCount / JewelManager.DefaultLineLength;
+            float scale = 1f + Mathf.Lerp(0.08f, 0.22f, progress);
+            float alpha = Mathf.Lerp(0.42f, 0.85f, progress);
+
+            if (iconRect != null)
+            {
+                iconRect.localScale = iconBaseScale * scale;
+            }
+
+            if (effectRect != null)
+            {
+                effectRect.localScale = effectBaseScale * scale;
+            }
+
+            if (effectImage != null)
+            {
+                effectImage.gameObject.SetActive(true);
+                effectImage.color = WithAlpha(baseJewelColor, alpha);
+            }
+        }
+
+        public void SetMovePreview(bool enabled)
+        {
+            isPreviewingMove = enabled;
+
+            if (!enabled && !isChosen)
+            {
+                ClearFeedback();
+            }
+        }
+
+        public void ClearFeedback()
+        {
+            CacheVisualReferences();
+            isPreviewingMove = false;
+            ResetAnimationState();
+        }
+
+        public void ResetAnimationState()
+        {
+            CacheVisualReferences();
+
+            if (iconRect != null)
+            {
+                iconRect.localScale = iconBaseScale;
+                iconRect.localPosition = iconBaseLocalPosition;
+            }
+
+            if (effectRect != null)
+            {
+                effectRect.localScale = effectBaseScale;
+                effectRect.localPosition = effectBaseLocalPosition;
+            }
+
+            if (iconImage != null)
+            {
+                iconImage.color = WithAlpha(baseJewelColor, 1f);
+            }
+
+            if (effectImage != null)
+            {
+                effectImage.color = WithAlpha(baseJewelColor, 0f);
+                effectImage.gameObject.SetActive(false);
+            }
+        }
+
+        public void SetSequenceVisual(float alpha, float scale, bool showEffect)
+        {
+            CacheVisualReferences();
+            alpha = Mathf.Clamp01(alpha);
+            scale = Mathf.Max(0f, scale);
+
+            if (iconRect != null)
+            {
+                iconRect.localScale = iconBaseScale * scale;
+            }
+
+            if (effectRect != null)
+            {
+                effectRect.localScale = effectBaseScale * scale;
+            }
+
+            if (iconImage != null)
+            {
+                iconImage.color = WithAlpha(baseJewelColor, alpha);
+            }
+
+            if (effectImage != null)
+            {
+                effectImage.gameObject.SetActive(showEffect && alpha > 0f);
+                effectImage.color = WithAlpha(baseJewelColor, showEffect ? alpha * 0.75f : 0f);
+            }
+        }
+
+        public void SetVisualWorldOffset(Vector3 offset)
+        {
+            CacheVisualReferences();
+
+            if (iconRect != null)
+            {
+                iconRect.localPosition = iconBaseLocalPosition + GetLocalOffset(iconRect, offset);
+            }
+
+            if (effectRect != null)
+            {
+                effectRect.localPosition = effectBaseLocalPosition + GetLocalOffset(effectRect, offset);
+            }
+        }
+
+        private void Update()
+        {
+            if (!isPreviewingMove || isChosen) return;
+
+            CacheVisualReferences();
+            float pulse = (Mathf.Sin(Time.unscaledTime * 5.5f) + 1f) * 0.5f;
+            float alpha = Mathf.Lerp(0.18f, 0.58f, pulse);
+            float scale = Mathf.Lerp(1.02f, 1.1f, pulse);
+
+            if (iconRect != null)
+            {
+                iconRect.localScale = iconBaseScale * scale;
+            }
+
+            if (effectRect != null)
+            {
+                effectRect.localScale = effectBaseScale * scale;
+            }
+
+            if (effectImage != null)
+            {
+                effectImage.gameObject.SetActive(true);
+                effectImage.color = WithAlpha(baseJewelColor, alpha);
+            }
+        }
+
+        private void CacheVisualReferences()
+        {
+            if (rectTransform == null)
+            {
+                rectTransform = GetComponent<RectTransform>();
+            }
+
+            if (iconRect == null && tempIcon != null)
+            {
+                iconRect = tempIcon.GetComponent<RectTransform>();
+                iconImage = tempIcon.GetComponent<Image>();
+                if (iconRect != null)
+                {
+                    iconBaseScale = iconRect.localScale;
+                    iconBaseLocalPosition = iconRect.localPosition;
+                }
+            }
+
+            if (effectRect == null && tempEffect != null)
+            {
+                effectRect = tempEffect.GetComponent<RectTransform>();
+                effectImage = tempEffect.GetComponent<Image>();
+                if (effectRect != null)
+                {
+                    effectBaseScale = effectRect.localScale;
+                    effectBaseLocalPosition = effectRect.localPosition;
+                }
+            }
+        }
+
+        private static Vector3 GetLocalOffset(RectTransform targetRect, Vector3 worldOffset)
+        {
+            if (targetRect == null || targetRect.parent == null) return worldOffset;
+
+            return targetRect.parent.InverseTransformVector(worldOffset);
+        }
+
+        private static Color WithAlpha(Color color, float alpha)
+        {
+            color.a = alpha;
+            return color;
         }
 
         private static Sprite GetFallbackIcon(int jewelType)
@@ -164,6 +371,13 @@ namespace LLL
             if (!isInitialize) return;
 
             jewelManager.MouseEnterCall(this);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            if (!isInitialize) return;
+
+            jewelManager.MouseExitCall(this);
         }
 
         public void OnPointerUp(PointerEventData eventData)

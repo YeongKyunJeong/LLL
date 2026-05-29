@@ -1,5 +1,56 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &197181111212571593
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1127019736970767619}
+  - component: {fileID: 5483803341362886234}
+  m_Layer: 0
+  m_Name: BattleController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1127019736970767619
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 197181111212571593}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3887199425735606177}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5483803341362886234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 197181111212571593}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d031a4fc347d4f0ea8c1f0e3946662bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LLL.BattleController
+  allies: []
+  enemies: []
+  defaultPlayerPower: 10
+  enemyAttackDamage: 8
+  autoBindHpBars: 1
+  allyHpBars: []
+  enemyHpBars: []
 --- !u!1 &7515386676516503874
 GameObject:
   m_ObjectHideFlags: 0
@@ -80,6 +131,7 @@ Transform:
   - {fileID: 13333484485457542}
   - {fileID: 7504799998889482065}
   - {fileID: 5334983236913048473}
+  - {fileID: 1127019736970767619}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5678939535422095094
@@ -95,7 +147,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LLL.InStageManager
   jewelManager: {fileID: 3643203540678621627}
-  sOManager: {fileID: 3571696275911662689}
+  sOManager: {fileID: 0}
+  jsonLoadManager: {fileID: 0}
+  battleController: {fileID: 0}
+  stageEnemyDataLibrary: {fileID: 11400000, guid: b2589f32d616c4641bbeee30791b0b4e, type: 2}
+  defaultEnemyLevel: 1
 --- !u!1001 &3718459627489873149
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -260,29 +316,8 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 5888232285427512401, guid: 6782b7f50b776704d94f33348922263f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 3571696275911662689}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6782b7f50b776704d94f33348922263f, type: 3}
---- !u!1 &1925597993303557641 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5888232285427512401, guid: 6782b7f50b776704d94f33348922263f, type: 3}
-  m_PrefabInstance: {fileID: 5408309941678436952}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &3571696275911662689
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1925597993303557641}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eae2c8db4133c034392d82d05cbd49a4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LLL.SOManager
-  <SkillLibrary>k__BackingField: {fileID: 11400000, guid: 86b924011f9b7f5428c23fc53f7f00de, type: 2}
 --- !u!4 &7504799998889482065 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2533357163319665929, guid: 6782b7f50b776704d94f33348922263f, type: 3}

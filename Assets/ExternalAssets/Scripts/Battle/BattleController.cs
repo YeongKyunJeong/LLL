@@ -70,6 +70,12 @@ namespace LLL
         private int currentTurn = 1;
         private bool isResolvingTurn;
 
+        public void ConfigureRuntimeCombatants(CharacterRuntimeData[] allyRuntimeData, CharacterRuntimeData[] enemyRuntimeData)
+        {
+            allies = BuildCombatants(allyRuntimeData, "Ally");
+            enemies = BuildCombatants(enemyRuntimeData, "Enemy");
+        }
+
         public void Initialize(SOManager soManager, JewelManager sourceJewelManager)
         {
             if (jewelManager != null)
@@ -90,6 +96,32 @@ namespace LLL
             }
 
             RefreshHpBars();
+        }
+
+        private BattleCombatant[] BuildCombatants(CharacterRuntimeData[] runtimeData, string fallbackPrefix)
+        {
+            if (runtimeData == null || runtimeData.Length == 0)
+            {
+                return null;
+            }
+
+            BattleCombatant[] result = new BattleCombatant[runtimeData.Length];
+            for (int i = 0; i < runtimeData.Length; i++)
+            {
+                result[i] = new BattleCombatant();
+
+                if (runtimeData[i] != null)
+                {
+                    string displayName = string.IsNullOrWhiteSpace(runtimeData[i].DisplayName) ? $"{fallbackPrefix} {i + 1}" : runtimeData[i].DisplayName;
+                    result[i].Initialize(displayName, runtimeData[i].LevelStats.maxHp);
+                }
+                else
+                {
+                    result[i].Initialize($"{fallbackPrefix} {i + 1}", 100);
+                }
+            }
+
+            return result;
         }
 
         private void OnDestroy()

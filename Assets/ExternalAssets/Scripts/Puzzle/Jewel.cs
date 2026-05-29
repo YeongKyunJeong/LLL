@@ -14,7 +14,7 @@ namespace LLL
         public Vector2 Pos { get => pos; }
         public int jewelType;
         public bool IsActive { get => isChosen; }
-        public SkillData SkillData => skillLibrary != null ? skillLibrary.GetSkillData(jewelType) : null;
+        public SkillData SkillData => jewelManager != null ? jewelManager.GetSkillData(jewelType) : null;
         public Vector3 WorldPosition
         {
             get
@@ -47,8 +47,8 @@ namespace LLL
 
         public void Initialize(JewelManager _jewelManager, SkillLibrary _skillLibrary, int _iD)
         {
-            if (jewelManager == null) jewelManager = _jewelManager;
-            if (skillLibrary == null) skillLibrary = _skillLibrary;
+            jewelManager = _jewelManager;
+            skillLibrary = _skillLibrary;
             iD = _iD;
             CacheVisualReferences();
             ChangeJewelType();

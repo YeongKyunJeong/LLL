@@ -28,6 +28,7 @@ namespace LLL
         [SerializeField] private float popAnimationDuration = 0.18f;
         [SerializeField] private float moveAnimationDuration = 0.22f;
         [SerializeField] private float spawnAnimationDuration = 0.18f;
+        [SerializeField] private int[] activeSkillIndices = new int[JewelSkillCount] { 0, 1, 2, 3, 4, 5 };
         
         public Color32[] tempColors = new Color32[JewelSkillCount]
         {
@@ -64,14 +65,16 @@ namespace LLL
         public struct JewelSkillActivation
         {
             public int JewelType { get; }
+            public int SkillIndex { get; }
             public int Stage { get; }
             public int PopCount { get; }
             public int SequenceIndex { get; }
             public SkillData SkillData { get; }
 
-            public JewelSkillActivation(int jewelType, int stage, int popCount, int sequenceIndex, SkillData skillData)
+            public JewelSkillActivation(int jewelType, int skillIndex, int stage, int popCount, int sequenceIndex, SkillData skillData)
             {
                 JewelType = jewelType;
+                SkillIndex = skillIndex;
                 Stage = stage;
                 PopCount = popCount;
                 SequenceIndex = sequenceIndex;
@@ -81,8 +84,14 @@ namespace LLL
 
         public void Initialize(SOManager _sOManager)
         {
+            Initialize(_sOManager, null);
+        }
+
+        public void Initialize(SOManager _sOManager, int[] skillIndices)
+        {
             sOManager = _sOManager;
             skillLibrary = sOManager != null ? sOManager.SkillLibrary : null;
+            SetActiveSkillIndices(skillIndices ?? (sOManager != null ? sOManager.GetDefaultJewelSkillIndices(JewelSkillCount) : null));
 
             isDown = false;
             isInputBlocked = false;
@@ -385,7 +394,37 @@ namespace LLL
 
         public SkillData GetSkillData(int jewelType)
         {
-            return skillLibrary != null ? skillLibrary.GetSkillData(jewelType) : null;
+            return skillLibrary != null ? skillLibrary.GetSkillData(GetSkillIndex(jewelType)) : null;
+        }
+
+        public int GetSkillIndex(int jewelType)
+        {
+            EnsureActiveSkillIndices();
+
+            int index = Mathf.Clamp(jewelType, 0, activeSkillIndices.Length - 1);
+            return Mathf.Max(0, activeSkillIndices[index]);
+        }
+
+        public void SetActiveSkillIndices(int[] skillIndices)
+        {
+            if (activeSkillIndices == null || activeSkillIndices.Length != JewelSkillCount)
+            {
+                activeSkillIndices = new int[JewelSkillCount];
+            }
+
+            for (int i = 0; i < JewelSkillCount; i++)
+            {
+                if (skillIndices != null && skillIndices.Length > 0)
+                {
+                    activeSkillIndices[i] = Mathf.Max(0, skillIndices[i % skillIndices.Length]);
+                }
+                else
+                {
+                    activeSkillIndices[i] = i;
+                }
+            }
+
+            RefreshAllJewelVisuals();
         }
 
         private void EnsureJewelReferences()
@@ -410,6 +449,25 @@ namespace LLL
                 new Color32(72, 128, 224, 255),
                 new Color32(85, 189, 231, 255),
             };
+        }
+
+        private void EnsureActiveSkillIndices()
+        {
+            if (activeSkillIndices != null && activeSkillIndices.Length == JewelSkillCount) return;
+
+            SetActiveSkillIndices(sOManager != null ? sOManager.GetDefaultJewelSkillIndices(JewelSkillCount) : null);
+        }
+
+        private void RefreshAllJewelVisuals()
+        {
+            if (jewels == null) return;
+
+            for (int i = 0; i < jewels.Length; i++)
+            {
+                if (jewels[i] == null) continue;
+
+                jewels[i].ApplyVisual();
+            }
         }
 
         private void RefreshDragFeedback()
@@ -667,7 +725,8 @@ namespace LLL
                 while (remainingCount > 0)
                 {
                     int stage = Mathf.Min(3, remainingCount);
-                    activations.Add(new JewelSkillActivation(jewelType, stage, popCountsByType[jewelType], sequenceIndex++, GetSkillData(jewelType)));
+                    int skillIndex = GetSkillIndex(jewelType);
+                    activations.Add(new JewelSkillActivation(jewelType, skillIndex, stage, popCountsByType[jewelType], sequenceIndex++, GetSkillData(jewelType)));
                     remainingCount -= stage;
                 }
             }

@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adbcc7cee97b35048acec0c3184a3120, type: 3}
+  m_Name: MasterEnemyDataLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::LLL.EnemyDataLibrary
+  <Type>k__BackingField: 1
+  <StageId>k__BackingField: master
+  <NormalEnemies>k__BackingField:
+  - {fileID: 11400000, guid: f1f79be22452e544dbdad6631c9febe5, type: 2}
+  <BossEnemies>k__BackingField: []

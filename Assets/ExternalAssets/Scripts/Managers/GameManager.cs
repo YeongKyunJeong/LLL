@@ -35,6 +35,8 @@ namespace LLL
 
         //private bool isSceneLoading;
         private SceneType currentSceneType;
+        [SerializeField] private JsonLoadManager jsonLoadManager;
+        [SerializeField] private PartySelectionData selectedParty = PartySelectionData.CreateDefault(3);
 
         public SceneType CurrentSceneType
         {
@@ -59,6 +61,11 @@ namespace LLL
         private void InitializeGlobalManagers()
         {
             DontDestroyOnLoad(gameObject);
+
+            if (JsonLoadManager != null)
+            {
+                JsonLoadManager.Initialize();
+            }
         }
 
         private void InitializeScene()
@@ -97,7 +104,7 @@ namespace LLL
             return currentSceneType = SceneType.Null;
         }
 
-        /// <param name="sceneName">·ÎµåÇÒ ¾À ÀÌ¸§</param>
+        /// <param name="sceneName">ï¿½Îµï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ì¸ï¿½</param>
         //private void LoadScene(string sceneName, int stageNumber = 0)
         //{
         //    if (sceneName == IN_STAGE_SCENE_STR) sceneName = $"{IN_STAGE_SCENE_STR}_{stageNumber:00}";
@@ -221,6 +228,36 @@ namespace LLL
 
         #endregion
 
+        public JsonLoadManager JsonLoadManager
+        {
+            get
+            {
+                if (jsonLoadManager == null)
+                {
+                    jsonLoadManager = GetComponentInChildren<JsonLoadManager>();
+                }
+
+                return jsonLoadManager;
+            }
+        }
+
+        public PartySelectionData SelectedParty
+        {
+            get
+            {
+                if (selectedParty == null || selectedParty.Members == null || selectedParty.Members.Length == 0)
+                {
+                    selectedParty = PartySelectionData.CreateDefault(3);
+                }
+
+                return selectedParty;
+            }
+        }
+
+        public void SetSelectedParty(PartySelectionData partySelectionData)
+        {
+            selectedParty = partySelectionData ?? PartySelectionData.CreateDefault(3);
+        }
     }
 
 }

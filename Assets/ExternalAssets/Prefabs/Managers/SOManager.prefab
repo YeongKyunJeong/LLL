@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2533357163319665929}
+  - component: {fileID: 7809387550724360493}
   m_Layer: 0
   m_Name: SOManager
   m_TagString: Untagged
@@ -31,3 +32,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7809387550724360493
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5888232285427512401}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eae2c8db4133c034392d82d05cbd49a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LLL.SOManager
+  <SkillLibrary>k__BackingField: {fileID: 11400000, guid: 86b924011f9b7f5428c23fc53f7f00de, type: 2}
+  <PlayerDataLibrary>k__BackingField: {fileID: 11400000, guid: 620ff5c82d5abb546bc08f8440d0b5cb, type: 2}
+  <MasterEnemyDataLibrary>k__BackingField: {fileID: 11400000, guid: 2403fcba9eea7b3469e6f8994a3ebf25, type: 2}
+  defaultJewelSkillIndices: 000000000100000002000000030000000400000005000000

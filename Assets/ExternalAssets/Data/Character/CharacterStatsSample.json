@@ -1,0 +1,41 @@
+{
+  "characters": [
+    {
+      "characterId": "player_sample_001",
+      "levelStats": [
+        {
+          "level": 1,
+          "requiredExp": 100,
+          "maxHp": 100,
+          "physicalPower": 10,
+          "physicalDefense": 5,
+          "magicPower": 8,
+          "magicDefense": 4
+        },
+        {
+          "level": 2,
+          "requiredExp": 150,
+          "maxHp": 115,
+          "physicalPower": 12,
+          "physicalDefense": 6,
+          "magicPower": 10,
+          "magicDefense": 5
+        }
+      ]
+    },
+    {
+      "characterId": "enemy_sample_001",
+      "levelStats": [
+        {
+          "level": 1,
+          "requiredExp": 0,
+          "maxHp": 80,
+          "physicalPower": 8,
+          "physicalDefense": 3,
+          "magicPower": 4,
+          "magicDefense": 2
+        }
+      ]
+    }
+  ]
+}

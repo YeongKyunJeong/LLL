@@ -8,6 +8,7 @@ namespace LLL
         [field: SerializeField] public SkillLibrary SkillLibrary { get; private set; }
         [field: SerializeField] public PlayerDataLibrary PlayerDataLibrary { get; private set; }
         [field: SerializeField] public EnemyDataLibrary MasterEnemyDataLibrary { get; private set; }
+        [field: SerializeField] public EquipmentDataLibrary EquipmentDataLibrary { get; private set; }
 
         [SerializeField] private int[] defaultJewelSkillIndices = new int[6] { 0, 1, 2, 3, 4, 5 };
 
@@ -72,6 +73,26 @@ namespace LLL
             }
 
             return boss ? MasterEnemyDataLibrary.GetBossEnemyData(index) : MasterEnemyDataLibrary.GetNormalEnemyData(index);
+        }
+
+        public EquipmentData GetEquipmentData(int index)
+        {
+            if (EquipmentDataLibrary == null)
+            {
+                return null;
+            }
+
+            return EquipmentDataLibrary.GetEquipmentData(index);
+        }
+
+        public EquipmentData GetEquipmentData(string equipmentId)
+        {
+            if (EquipmentDataLibrary == null)
+            {
+                return null;
+            }
+
+            return EquipmentDataLibrary.GetEquipmentData(equipmentId);
         }
 
         public int[] GetDefaultJewelSkillIndices(int requiredCount)

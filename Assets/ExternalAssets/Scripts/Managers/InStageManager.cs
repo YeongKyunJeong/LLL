@@ -35,6 +35,8 @@ namespace LLL
             int[] activeSkillIndices = CharacterSkillLoadout.BuildJewelSkillIndices(playerCharacters, JewelManager.JewelSkillCount);
             jewelManager.Initialize(sOManager, activeSkillIndices);
             EnsureBattleController();
+            if (battleController == null) return;
+
             battleController.ConfigureRuntimeCombatants(playerCharacters, enemyCharacters);
             battleController.Initialize(sOManager, jewelManager);
 
@@ -51,7 +53,7 @@ namespace LLL
             CharacterRuntimeData[] result = new CharacterRuntimeData[members.Length];
             for (int i = 0; i < members.Length; i++)
             {
-                result[i] = resolver.ResolvePlayer(members[i].CharacterIndex, members[i].Level);
+                result[i] = resolver.ResolvePlayer(members[i].CharacterIndex, members[i].Level, members[i].EquipmentIndices);
             }
 
             return result;
@@ -83,9 +85,7 @@ namespace LLL
 
             if (battleController != null) return;
 
-            GameObject battleControllerObject = new GameObject("BattleController");
-            battleControllerObject.transform.SetParent(transform);
-            battleController = battleControllerObject.AddComponent<BattleController>();
+            Debug.LogError("BattleController is not assigned. Place it in the scene or prefab and assign it from the inspector.");
         }
 
 

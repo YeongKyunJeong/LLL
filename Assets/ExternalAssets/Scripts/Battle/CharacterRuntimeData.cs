@@ -4,16 +4,19 @@ namespace LLL
 {
     public class CharacterRuntimeData
     {
-        public CharacterRuntimeData(CharacterData characterData, CharacterLevelStats levelStats)
+        public CharacterRuntimeData(CharacterData characterData, CharacterLevelStats levelStats, EquipmentData[] equippedItems = null)
         {
             CharacterData = characterData;
             LevelStats = levelStats;
-            CurrentHp = levelStats.maxHp;
+            EquippedItems = equippedItems ?? new EquipmentData[0];
+            CurrentHp = FinalStats.MaxHp;
         }
 
         public CharacterData CharacterData { get; }
         public CharacterLevelStats LevelStats { get; }
+        public EquipmentData[] EquippedItems { get; }
         public int CurrentHp { get; private set; }
+        public CharacterFinalStats FinalStats => CharacterStatCalculator.Calculate(this);
 
         public string CharacterId => CharacterData != null ? CharacterData.CharacterId : string.Empty;
         public string DisplayName => CharacterData != null ? CharacterData.DisplayName : string.Empty;
@@ -23,7 +26,7 @@ namespace LLL
 
         public void SetCurrentHp(int value)
         {
-            CurrentHp = Mathf.Clamp(value, 0, LevelStats.maxHp);
+            CurrentHp = Mathf.Clamp(value, 0, FinalStats.MaxHp);
         }
     }
 }

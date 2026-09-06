@@ -47,4 +47,5 @@ MonoBehaviour:
   <SkillLibrary>k__BackingField: {fileID: 11400000, guid: 86b924011f9b7f5428c23fc53f7f00de, type: 2}
   <PlayerDataLibrary>k__BackingField: {fileID: 11400000, guid: 620ff5c82d5abb546bc08f8440d0b5cb, type: 2}
   <MasterEnemyDataLibrary>k__BackingField: {fileID: 11400000, guid: 2403fcba9eea7b3469e6f8994a3ebf25, type: 2}
+  <EquipmentDataLibrary>k__BackingField: {fileID: 11400000, guid: 281dad88af47e0540afb8a8acc458d8c, type: 2}
   defaultJewelSkillIndices: 000000000100000002000000030000000400000005000000

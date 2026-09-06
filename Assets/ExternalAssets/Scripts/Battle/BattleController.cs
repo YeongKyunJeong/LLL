@@ -9,21 +9,36 @@ namespace LLL
     public class BattleController : MonoBehaviour
     {
         [Serializable]
-        private class BattleCombatant
+        public class BattleCombatant
         {
             [field: SerializeField] public string DisplayName { get; private set; }
             [field: SerializeField] public int MaxHp { get; private set; } = 100;
             [field: SerializeField] public int CurrentHp { get; private set; } = 100;
             [field: SerializeField] public int Block { get; private set; }
 
+            public CharacterRuntimeData RuntimeData { get; private set; }
+            public CharacterFinalStats FinalStats { get; private set; }
             public bool IsAlive => CurrentHp > 0;
             public float HpRatio => MaxHp > 0 ? Mathf.Clamp01((float)CurrentHp / MaxHp) : 0f;
+            public int OccupiedSlots => RuntimeData != null ? RuntimeData.OccupiedSlots : 1;
 
             public void Initialize(string displayName, int maxHp)
             {
                 DisplayName = displayName;
-                MaxHp = Mathf.Max(1, maxHp);
+                RuntimeData = null;
+                FinalStats = new CharacterFinalStats(maxHp, 0, 0, 0, 0);
+                MaxHp = FinalStats.MaxHp;
                 CurrentHp = MaxHp;
+                Block = 0;
+            }
+
+            public void Initialize(CharacterRuntimeData runtimeData, string fallbackName)
+            {
+                RuntimeData = runtimeData;
+                FinalStats = CharacterStatCalculator.Calculate(runtimeData);
+                DisplayName = runtimeData != null && !string.IsNullOrWhiteSpace(runtimeData.DisplayName) ? runtimeData.DisplayName : fallbackName;
+                MaxHp = FinalStats.MaxHp;
+                CurrentHp = Mathf.Clamp(runtimeData != null ? runtimeData.CurrentHp : MaxHp, 0, MaxHp);
                 Block = 0;
             }
 
@@ -38,6 +53,7 @@ namespace LLL
 
                 int appliedDamage = Mathf.Min(CurrentHp, remainingDamage);
                 CurrentHp -= appliedDamage;
+                RuntimeData?.SetCurrentHp(CurrentHp);
                 return appliedDamage;
             }
 
@@ -47,6 +63,7 @@ namespace LLL
 
                 int previousHp = CurrentHp;
                 CurrentHp = Mathf.Min(MaxHp, CurrentHp + Mathf.Max(0, amount));
+                RuntimeData?.SetCurrentHp(CurrentHp);
                 return CurrentHp - previousHp;
             }
 
@@ -60,12 +77,12 @@ namespace LLL
 
         [SerializeField] private BattleCombatant[] allies;
         [SerializeField] private BattleCombatant[] enemies;
-        [SerializeField] private int defaultPlayerPower = 10;
         [SerializeField] private int enemyAttackDamage = 8;
-        [SerializeField] private bool autoBindHpBars = true;
+        [SerializeField] private bool autoBindHpBars;
         [SerializeField] private Image[] allyHpBars;
         [SerializeField] private Image[] enemyHpBars;
 
+        private SOManager soManager;
         private JewelManager jewelManager;
         private int currentTurn = 1;
         private bool isResolvingTurn;
@@ -76,8 +93,9 @@ namespace LLL
             enemies = BuildCombatants(enemyRuntimeData, "Enemy");
         }
 
-        public void Initialize(SOManager soManager, JewelManager sourceJewelManager)
+        public void Initialize(SOManager sourceSoManager, JewelManager sourceJewelManager)
         {
+            soManager = sourceSoManager;
             if (jewelManager != null)
             {
                 jewelManager.PopResolved -= ResolveTurn;
@@ -102,23 +120,14 @@ namespace LLL
         {
             if (runtimeData == null || runtimeData.Length == 0)
             {
-                return null;
+                return Array.Empty<BattleCombatant>();
             }
 
             BattleCombatant[] result = new BattleCombatant[runtimeData.Length];
             for (int i = 0; i < runtimeData.Length; i++)
             {
                 result[i] = new BattleCombatant();
-
-                if (runtimeData[i] != null)
-                {
-                    string displayName = string.IsNullOrWhiteSpace(runtimeData[i].DisplayName) ? $"{fallbackPrefix} {i + 1}" : runtimeData[i].DisplayName;
-                    result[i].Initialize(displayName, runtimeData[i].LevelStats.maxHp);
-                }
-                else
-                {
-                    result[i].Initialize($"{fallbackPrefix} {i + 1}", 100);
-                }
+                result[i].Initialize(runtimeData[i], $"{fallbackPrefix} {i + 1}");
             }
 
             return result;
@@ -156,15 +165,16 @@ namespace LLL
             {
                 JewelManager.JewelSkillActivation activation = activations[i];
                 SkillData skill = activation.SkillData;
-                if (skill == null) continue;
+                BattleCombatant caster = GetCasterForActivation(activation.SequenceIndex);
+                if (skill == null || caster == null) continue;
 
-                ResolveDamageSkill(skill, activation.Stage);
-                ResolveHealSkill(skill, activation.Stage);
-                ResolveBlockSkill(skill, activation.Stage);
+                ResolveDamageSkill(skill, activation.Stage, caster, enemies);
+                ResolveHealSkill(skill, activation.Stage, caster, allies);
+                ResolveBlockSkill(skill, activation.Stage, caster);
             }
         }
 
-        private void ResolveDamageSkill(SkillData skill, int stage)
+        private void ResolveDamageSkill(SkillData skill, int stage, BattleCombatant caster, BattleCombatant[] targetGroup)
         {
             if (skill.Damages == null) return;
 
@@ -173,21 +183,21 @@ namespace LLL
                 SkillData.Damage damage = skill.Damages[i];
                 int targetCount = Mathf.Max(1, GetStageInt(damage.TargetCount, stage, 1));
                 int hitCount = Mathf.Max(1, GetStageInt(damage.HitCount, stage, 1));
-                int amount = Mathf.Max(1, Mathf.RoundToInt(GetStageValue(damage.PhysicsFactors, damage.PhysicsCs, stage) + GetStageValue(damage.MagicFactors, damage.MagicCs, stage)));
-                List<BattleCombatant> targets = GetTargets(enemies, damage.Target, targetCount);
+                List<BattleCombatant> targets = GetTargets(targetGroup, damage.Target, targetCount);
 
                 for (int targetIndex = 0; targetIndex < targets.Count; targetIndex++)
                 {
                     for (int hit = 0; hit < hitCount; hit++)
                     {
+                        int amount = BattleCalculationUtility.CalculateDamage(caster, targets[targetIndex], damage, stage);
                         int appliedDamage = targets[targetIndex].TakeDamage(amount);
-                        Debug.Log($"{skill.name} Lv.{stage} dealt {appliedDamage} to {targets[targetIndex].DisplayName}");
+                        Debug.Log($"{caster.DisplayName} used {skill.name} Lv.{stage} and dealt {appliedDamage} to {targets[targetIndex].DisplayName}");
                     }
                 }
             }
         }
 
-        private void ResolveHealSkill(SkillData skill, int stage)
+        private void ResolveHealSkill(SkillData skill, int stage, BattleCombatant caster, BattleCombatant[] targetGroup)
         {
             if (skill.Heals == null) return;
 
@@ -195,52 +205,153 @@ namespace LLL
             {
                 SkillData.Heal heal = skill.Heals[i];
                 int targetCount = Mathf.Max(1, GetStageInt(heal.TargetCount, stage, 1));
-                int amount = Mathf.Max(1, Mathf.RoundToInt(GetStageValue(heal.PhysicsFactors, heal.PhysicsCs, stage) + GetStageValue(heal.MagicFactors, heal.MagicCs, stage)));
-                List<BattleCombatant> targets = GetTargets(allies, heal.Target, targetCount);
+                List<BattleCombatant> targets = GetTargets(targetGroup, heal.Target, targetCount);
 
                 for (int targetIndex = 0; targetIndex < targets.Count; targetIndex++)
                 {
+                    int amount = BattleCalculationUtility.CalculateHeal(caster, targets[targetIndex], heal, stage);
                     int appliedHeal = targets[targetIndex].Heal(amount);
-                    Debug.Log($"{skill.name} Lv.{stage} healed {appliedHeal} on {targets[targetIndex].DisplayName}");
+                    Debug.Log($"{caster.DisplayName} used {skill.name} Lv.{stage} and healed {appliedHeal} on {targets[targetIndex].DisplayName}");
                 }
             }
         }
 
-        private void ResolveBlockSkill(SkillData skill, int stage)
+        private void ResolveBlockSkill(SkillData skill, int stage, BattleCombatant caster)
         {
             if (skill.Blocks == null) return;
 
             for (int i = 0; i < skill.Blocks.Length; i++)
             {
-                SkillData.Block block = skill.Blocks[i];
-                int amount = Mathf.Max(1, Mathf.RoundToInt(GetStageValue(block.PhysicsFactors, block.PhysicsCs, stage) + GetStageValue(block.MagicFactors, block.MagicCs, stage)));
-                BattleCombatant target = GetFirstAlive(allies);
-                if (target == null) continue;
-
-                target.AddBlock(amount);
-                Debug.Log($"{skill.name} Lv.{stage} added {amount} block to {target.DisplayName}");
+                int amount = BattleCalculationUtility.CalculateBlock(caster, skill.Blocks[i], stage);
+                caster.AddBlock(amount);
+                Debug.Log($"{caster.DisplayName} used {skill.name} Lv.{stage} and gained {amount} block");
             }
         }
 
         private void ResolveEnemyPatterns()
         {
+            if (enemies == null) return;
+
             for (int i = 0; i < enemies.Length; i++)
             {
                 if (enemies[i] == null || !enemies[i].IsAlive) continue;
 
+                SkillData skill = SelectEnemySkill(enemies[i]);
+                if (skill != null)
+                {
+                    ResolveDamageSkill(skill, 1, enemies[i], allies);
+                    ResolveHealSkill(skill, 1, enemies[i], enemies);
+                    ResolveBlockSkill(skill, 1, enemies[i]);
+                    continue;
+                }
+
                 BattleCombatant target = GetFirstAlive(allies);
                 if (target == null) break;
 
-                int appliedDamage = target.TakeDamage(enemyAttackDamage);
+                int fallbackDamage = Mathf.Max(1, enemies[i].FinalStats.PhysicalPower > 0 ? enemies[i].FinalStats.PhysicalPower : enemyAttackDamage);
+                int appliedDamage = target.TakeDamage(fallbackDamage);
                 Debug.Log($"{enemies[i].DisplayName} attacked {target.DisplayName} for {appliedDamage}");
             }
         }
 
+        private SkillData SelectEnemySkill(BattleCombatant enemy)
+        {
+            CharacterData characterData = enemy != null && enemy.RuntimeData != null ? enemy.RuntimeData.CharacterData : null;
+            if (characterData == null)
+            {
+                return null;
+            }
+
+            CharacterData.EnemyActionPattern[] patterns = characterData.EnemyActionPatterns;
+            if (patterns != null)
+            {
+                for (int i = 0; i < patterns.Length; i++)
+                {
+                    if (patterns[i].PatternType == CharacterData.EnemyActionPatternType.FixedTurn && patterns[i].Turn == currentTurn)
+                    {
+                        return GetRandomCandidateSkill(patterns[i].CandidateSkillIndices);
+                    }
+                }
+
+                List<int> conditionalCandidates = new List<int>();
+                for (int i = 0; i < patterns.Length; i++)
+                {
+                    if (patterns[i].PatternType != CharacterData.EnemyActionPatternType.ConditionalRandom) continue;
+                    if (!IsEnemyPatternConditionMet(enemy, patterns[i].ConditionKey)) continue;
+                    if (patterns[i].CandidateSkillIndices != null)
+                    {
+                        conditionalCandidates.AddRange(patterns[i].CandidateSkillIndices);
+                    }
+                }
+
+                SkillData conditionalSkill = GetRandomCandidateSkill(conditionalCandidates.ToArray());
+                if (conditionalSkill != null)
+                {
+                    return conditionalSkill;
+                }
+            }
+
+            return GetRandomCandidateSkill(characterData.SkillIndices);
+        }
+
+        private bool IsEnemyPatternConditionMet(BattleCombatant enemy, string conditionKey)
+        {
+            if (string.IsNullOrWhiteSpace(conditionKey))
+            {
+                return true;
+            }
+
+            switch (conditionKey.Trim().ToLowerInvariant())
+            {
+                case "lowhp":
+                case "hp30":
+                    return enemy != null && enemy.HpRatio <= 0.3f;
+                case "allylowhp":
+                    return enemies != null && enemies.Any(candidate => candidate != null && candidate.IsAlive && candidate.HpRatio <= 0.3f);
+                case "playerblock":
+                    return allies != null && allies.Any(candidate => candidate != null && candidate.IsAlive && candidate.Block > 0);
+                default:
+                    return true;
+            }
+        }
+
+        private SkillData GetRandomCandidateSkill(int[] candidateSkillIndices)
+        {
+            if (candidateSkillIndices == null || candidateSkillIndices.Length == 0 || soManager == null)
+            {
+                return null;
+            }
+
+            int startIndex = UnityEngine.Random.Range(0, candidateSkillIndices.Length);
+            for (int i = 0; i < candidateSkillIndices.Length; i++)
+            {
+                int index = candidateSkillIndices[(startIndex + i) % candidateSkillIndices.Length];
+                SkillData skill = soManager.GetSkillData(index);
+                if (skill != null)
+                {
+                    return skill;
+                }
+            }
+
+            return null;
+        }
+
+        private BattleCombatant GetCasterForActivation(int sequenceIndex)
+        {
+            List<BattleCombatant> aliveAllies = allies != null ? allies.Where(candidate => candidate != null && candidate.IsAlive).ToList() : null;
+            if (aliveAllies == null || aliveAllies.Count == 0)
+            {
+                return null;
+            }
+
+            return aliveAllies[Mathf.Abs(sequenceIndex) % aliveAllies.Count];
+        }
+
         private List<BattleCombatant> GetTargets(BattleCombatant[] candidates, SkillData.TargetType targetType, int targetCount)
         {
-            List<BattleCombatant> aliveCandidates = candidates
-                .Where(candidate => candidate != null && candidate.IsAlive)
-                .ToList();
+            List<BattleCombatant> aliveCandidates = candidates != null
+                ? candidates.Where(candidate => candidate != null && candidate.IsAlive).ToList()
+                : new List<BattleCombatant>();
 
             if (aliveCandidates.Count == 0) return aliveCandidates;
 
@@ -261,7 +372,16 @@ namespace LLL
                     break;
             }
 
-            return aliveCandidates.Take(Mathf.Max(1, targetCount)).ToList();
+            List<BattleCombatant> selectedTargets = new List<BattleCombatant>();
+            int occupiedSlots = 0;
+            int requiredSlots = Mathf.Max(1, targetCount);
+            for (int i = 0; i < aliveCandidates.Count && occupiedSlots < requiredSlots; i++)
+            {
+                selectedTargets.Add(aliveCandidates[i]);
+                occupiedSlots += Mathf.Max(1, aliveCandidates[i].OccupiedSlots);
+            }
+
+            return selectedTargets;
         }
 
         private BattleCombatant GetFirstAlive(BattleCombatant[] candidates)
@@ -274,14 +394,6 @@ namespace LLL
             }
 
             return null;
-        }
-
-        private float GetStageValue(float[] factors, float[] constants, int stage)
-        {
-            int index = Mathf.Max(0, stage - 1);
-            float factor = factors != null && factors.Length > 0 ? factors[Mathf.Min(index, factors.Length - 1)] : 0f;
-            float constant = constants != null && constants.Length > 0 ? constants[Mathf.Min(index, constants.Length - 1)] : 0f;
-            return defaultPlayerPower * factor + constant;
         }
 
         private int GetStageInt(int[] values, int stage, int fallback)
@@ -299,9 +411,9 @@ namespace LLL
                 allies = new BattleCombatant[3];
             }
 
-            if (enemies == null || enemies.Length == 0)
+            if (enemies == null)
             {
-                enemies = new BattleCombatant[3];
+                enemies = Array.Empty<BattleCombatant>();
             }
 
             InitializeEmptyCombatants(allies, "Ally");

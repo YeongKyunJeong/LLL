@@ -15,6 +15,11 @@ namespace LLL
 
         public CharacterRuntimeData ResolvePlayer(int playerLibraryIndex, int level)
         {
+            return ResolvePlayer(playerLibraryIndex, level, null);
+        }
+
+        public CharacterRuntimeData ResolvePlayer(int playerLibraryIndex, int level, int[] equipmentIndices)
+        {
             if (soManager == null)
             {
                 Debug.LogError("SOManager is not assigned.");
@@ -22,10 +27,15 @@ namespace LLL
             }
 
             CharacterData characterData = soManager.GetPlayerCharacterData(playerLibraryIndex);
-            return CreateRuntimeData(characterData, level);
+            return CreateRuntimeData(characterData, level, ResolveEquipment(equipmentIndices));
         }
 
         public CharacterRuntimeData ResolvePlayer(string characterId, int level)
+        {
+            return ResolvePlayer(characterId, level, null);
+        }
+
+        public CharacterRuntimeData ResolvePlayer(string characterId, int level, int[] equipmentIndices)
         {
             if (soManager == null)
             {
@@ -34,7 +44,7 @@ namespace LLL
             }
 
             CharacterData characterData = soManager.GetPlayerCharacterData(characterId);
-            return CreateRuntimeData(characterData, level);
+            return CreateRuntimeData(characterData, level, ResolveEquipment(equipmentIndices));
         }
 
         public CharacterRuntimeData ResolveEnemy(EnemyDataLibrary stageEnemyDataLibrary, string characterId, int level)
@@ -51,7 +61,7 @@ namespace LLL
                 characterData = soManager.GetMasterEnemyCharacterData(characterId);
             }
 
-            return CreateRuntimeData(characterData, level);
+            return CreateRuntimeData(characterData, level, null);
         }
 
         public CharacterRuntimeData ResolveEnemy(EnemyDataLibrary stageEnemyDataLibrary, int index, bool boss, int level)
@@ -68,10 +78,10 @@ namespace LLL
                 characterData = soManager.GetMasterEnemyCharacterData(index, boss);
             }
 
-            return CreateRuntimeData(characterData, level);
+            return CreateRuntimeData(characterData, level, null);
         }
 
-        private CharacterRuntimeData CreateRuntimeData(CharacterData characterData, int level)
+        private CharacterRuntimeData CreateRuntimeData(CharacterData characterData, int level, EquipmentData[] equipment)
         {
             if (characterData == null)
             {
@@ -91,7 +101,23 @@ namespace LLL
                 return null;
             }
 
-            return new CharacterRuntimeData(characterData, levelStats);
+            return new CharacterRuntimeData(characterData, levelStats, equipment);
+        }
+
+        private EquipmentData[] ResolveEquipment(int[] equipmentIndices)
+        {
+            if (soManager == null || equipmentIndices == null || equipmentIndices.Length == 0)
+            {
+                return new EquipmentData[0];
+            }
+
+            EquipmentData[] result = new EquipmentData[equipmentIndices.Length];
+            for (int i = 0; i < equipmentIndices.Length; i++)
+            {
+                result[i] = soManager.GetEquipmentData(equipmentIndices[i]);
+            }
+
+            return result;
         }
     }
 }
